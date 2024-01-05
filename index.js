@@ -26,6 +26,6 @@ dns.lookup('google.com', (err, adress, family) => {
     console.log('DNS 1 google.com', adress, timestamp());
 });
 
-console.log('888');
+console.log('777');
 
 const test = require('./while/test.js');
