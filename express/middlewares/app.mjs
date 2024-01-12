@@ -1,14 +1,21 @@
 import express from 'express';
+import morgan from 'morgan';
+import cors from 'cors';
 
 const app = express();
 
-const logger = (req, res, next) => {
-    console.log(req.method, req.path);
-    next();
-};
+app.use(morgan('tiny'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
-// app.use(logger);
-
-app.use(logger, (req, res) => res.send('Server'));
+app.use((req, res) => {
+    const data = {
+        name: 'Oleg',
+        number: '098235999',
+    };
+    console.log(req.body);
+    return res.json(data);
+});
 
 app.listen(5000, () => console.log('Start on port 5000'));
