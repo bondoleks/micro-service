@@ -1,33 +1,65 @@
-const db = require('../db');
+const pool = require('../db');
+const logger = require('../middleware/logger');
 
 class UserController {
-    async createUser(req, res) {
-        const { name } = req.body;
-        console.log(name);
-        res.json('ok');
+    async getUserSubscriptions(req, res) {
+        try {
+            const user = req.user;
+
+            const subscriptionsQueryResult = await pool.query(
+                'SELECT * FROM "subscription" WHERE user_id = $1 ORDER BY purchase_time DESC',
+                [user.id]
+            );
+
+            const subscriptions = subscriptionsQueryResult.rows;
+
+            logger.info('getUserSubscriptions' + user);
+
+            return res.status(200).json({ subscriptions });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
 
-    async getUser(req, res) {
-        const id = req.params.id;
-        const user = await db.query('SELECT * FROM mcuser where id = $1', [id]);
-        res.json(user.rows[0]);
+    async getUserBuyProducts(req, res) {
+        try {
+            const user = req.user;
+
+            const productsQueryResult = await pool.query(
+                'SELECT * FROM "product" WHERE buyer_user_id = $1 ORDER BY purchase_date DESC',
+                [user.id]
+            );
+
+            const products = productsQueryResult.rows;
+
+            logger.info('getUserProducts' + user);
+
+            return res.status(200).json({ products });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
 
-    async getUsers(req, res) {
-        const users = await db.query('SELECT * FROM mcuser');
-        res.json(users.rows);
-    }
+    async getUserSellProducts(req, res) {
+        try {
+            const user = req.user;
 
-    async updateUser(req, res) {
-        const { id, email } = req.body;
-        const user = await db.query(
-            'UPDATE mcuser set email = $1 where id = $2 RETURNING *',
-            [email, id]
-        );
-        res.json(user.rows[0]);
-    }
+            const productsQueryResult = await pool.query(
+                'SELECT id, creator_user_id, buyer_user_id, subscription_type, product_name, product_description, price, sold, create_date, purchase_date, photo FROM "product" WHERE creator_user_id = $1 AND sold = true ORDER BY purchase_date DESC;',
+                [user.id]
+            );
+            const products = productsQueryResult.rows;
 
-    async deleteUser(req, res) {}
+            logger.info('getUserProducts' + user);
+
+            return res.status(200).json({ products });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
 }
 
 module.exports = new UserController();
